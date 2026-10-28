@@ -533,3 +533,126 @@ tr:last-child td {
     padding: 8px;
   }
 }
+
+/* Profile and public-post composer (Step 3.8), plain CSS only. */
+.profile-page > .message {
+  margin-bottom: 16px;
+}
+
+.profile-section {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.profile-section > .message,
+.profile-form > .message,
+.profile-post-form > .message {
+  margin-bottom: 12px;
+}
+
+.profile-form,
+.profile-post-form {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-form input[readonly] {
+  color: var(--text-muted);
+  background: var(--bg);
+}
+
+.profile-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-posts-section__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.profile-posts-section__heading h2 {
+  margin-bottom: 0;
+}
+
+.profile-page-size {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block: 12px;
+}
+
+.profile-page-size label {
+  margin-bottom: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.profile-page-size select {
+  width: auto;
+  min-width: 76px;
+  min-height: 36px;
+  padding: 4px 8px;
+}
+
+.profile-post-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.profile-post {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.profile-post__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.profile-post__heading h3 {
+  margin: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.profile-post__heading time {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.profile-post__body {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .profile-section {
+    padding: 12px;
+  }
+
+  .profile-post {
+    padding: 12px;
+  }
+
+  .profile-page-size {
+    justify-content: flex-start;
+  }
+}
