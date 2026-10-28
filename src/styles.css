@@ -656,3 +656,22 @@ tr:last-child td {
     justify-content: flex-start;
   }
 }
+
+/* Public user posts page (Step 3.9). Reuses the shared post-card styles above. */
+.public-posts-page > .message {
+  margin-block: 16px;
+}
+
+.public-posts-page__count {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.public-posts-page__controls {
+  margin-top: 16px;
+}
+
+.public-posts-page__controls .profile-page-size {
+  justify-content: flex-start;
+}
