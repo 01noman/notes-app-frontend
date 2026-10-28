@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import App from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import './styles.css';
 
@@ -10,11 +11,12 @@ if (!rootElement) {
   throw new Error('Required root element #root was not found');
 }
 
-// Auth state is mounted above future route screens. The route table is added in Step 3.12.
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );
