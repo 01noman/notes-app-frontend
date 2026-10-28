@@ -182,3 +182,157 @@ th {
 tr:last-child td {
   border-bottom: 0;
 }
+
+/* Shared UI components: hand-written, semantic, and framework-free. */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+  padding-block: 12px;
+}
+
+.site-brand {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.site-nav__link {
+  padding: 4px 2px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.site-nav__link:hover,
+.site-nav__link--active {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.site-header__account {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.site-header__name {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.role-badge {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.site-header__logout {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+
+.site-header__notice {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.message--loading,
+.message--empty {
+  color: var(--text-muted);
+}
+
+.message--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.message--success {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.message__text {
+  flex: 1 1 auto;
+}
+
+.message__action {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 14px;
+}
+
+.message--compact {
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-block: 16px;
+}
+
+.pagination__label {
+  min-width: 110px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .site-header__inner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .site-header__account {
+    margin-left: auto;
+  }
+}
