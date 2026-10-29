@@ -2,6 +2,12 @@
 
 A small React + Vite client for the Secure Note-Taking Application. This repository is intentionally hand-written and uses plain CSS; it does not use a UI framework or generated starter template.
 
+## Live deployment
+
+- **Backend API (Render):** `https://notes-app-backend-aqh8.onrender.com/api/v1`
+- **Frontend (Vercel):** ADD the stable production URL here, and put the same exact value in `CORS_ORIGINS` on Render.
+- Free Render services sleep after about 15 minutes idle, so the first request can take up to a minute; the app shows a Retry message and keeps your session.
+
 ## Requirements
 
 - Node.js `>=24 <25` (the project was verified with Node `v24.22.1`)
@@ -59,7 +65,7 @@ Deploy this frontend repository with Vercel's Vite preset. Set `VITE_API_URL` in
 
 `vercel.json` rewrites deep links to `/index.html` so routes such as `/admin/users` and `/users/<id>/posts` still load after a browser refresh. It also sets a Content Security Policy and `X-Content-Type-Options`.
 
-**Before production deployment:** edit `connect-src` in `vercel.json` to replace the temporary `https://*.onrender.com` allowance with the exact HTTPS origin of your backend (for example, `https://your-service.onrender.com`). Keep the origin only—do not add `/api/v1` to the CSP host. `vercel.json` no longer contains a localhost allowance: its headers apply only on Vercel, so local `npm run dev` and `npm run preview` are unaffected. Make sure the backend's `CORS_ORIGINS` includes the exact Vercel site origin. Do not add inline scripts or inline style attributes; the CSP intentionally blocks them.
+`connect-src` in `vercel.json` allows only the deployed backend origin `https://notes-app-backend-aqh8.onrender.com` (origin only, no `/api/v1`). If the backend moves to another URL, update `connect-src` and redeploy. `vercel.json` contains no localhost allowance: its headers apply only on Vercel, so local `npm run dev` and `npm run preview` are unaffected.
 
 ## Route and refresh smoke checks
 
@@ -109,3 +115,4 @@ Run the frontend and backend locally with the demo data loaded. Tick each item o
 - [ ] **Deep-link refresh:** run `npm run build` and `npm run preview`; directly open and refresh `/admin/users`, `/admin/notes`, `/admin/interests`, and `/users/<known-user-id>/posts`. Confirm the app route loads instead of a host-level 404.
 - [ ] **Not Found:** open an unknown path; confirm the accessible Not Found screen and recovery links work.
 - [ ] **Role-based header/navigation:** verify anonymous, regular-user, and admin header links differ correctly; a regular user accessing admin routes sees Forbidden without a redirect loop.
+    
