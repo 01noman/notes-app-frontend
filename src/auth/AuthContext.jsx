@@ -1,36 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiRequest, setUnauthorizedHandler, TOKEN_STORAGE_KEY } from '../api/client.js';
-import { authReducer, createInitialAuthState } from './session.js';
+import { apiRequest, clearStoredToken, readStoredToken, setUnauthorizedHandler, storeToken } from '../api/client.js';
+import { authReducer, classifyVerificationError, createInitialAuthState } from './session.js';
 
 const AuthContext = createContext(null);
 const SESSION_EXPIRED_NOTICE = 'Session expired. Please log in again.';
-
-function readToken() {
-  try {
-    return globalThis.localStorage?.getItem(TOKEN_STORAGE_KEY) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function saveToken(token) {
-  try {
-    const storage = globalThis.localStorage;
-    if (!storage) throw new Error('Storage unavailable');
-    storage.setItem(TOKEN_STORAGE_KEY, token);
-  } catch {
-    throw new Error('This browser could not save your session. Check local storage settings and try again.');
-  }
-}
-
-function removeToken() {
-  try {
-    globalThis.localStorage?.removeItem(TOKEN_STORAGE_KEY);
-  } catch {
-    // An unavailable storage API must not keep the in-memory session authenticated.
-  }
-}
+// A sleeping free-tier host can need up to ~60 s to wake; allow for it when checking a stored session.
+const VERIFY_TIMEOUT_MS = 45_000;
 
 function safeDestination(destination) {
   if (typeof destination === 'string') {
@@ -59,10 +35,10 @@ function extractSession(payload) {
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate();
-  const [state, dispatch] = useReducer(authReducer, undefined, () => createInitialAuthState(Boolean(readToken())));
+  const [state, dispatch] = useReducer(authReducer, undefined, () => createInitialAuthState(Boolean(readStoredToken())));
 
   const handleUnauthorized = useCallback(() => {
-    removeToken();
+    clearStoredToken();
     dispatch({ type: 'SIGNED_OUT', notice: SESSION_EXPIRED_NOTICE });
     navigate('/login', { replace: true, state: { sessionExpired: true } });
   }, [navigate]);
@@ -75,7 +51,7 @@ export function AuthProvider({ children }) {
     const controller = new AbortController();
     let active = true;
 
-    apiRequest('users/me', { signal: controller.signal })
+    apiRequest('users/me', { signal: controller.signal, timeoutMs: VERIFY_TIMEOUT_MS })
       .then((payload) => {
         if (!active) return;
         const user = payload?.data?.user;
@@ -86,9 +62,15 @@ export function AuthProvider({ children }) {
       })
       .catch((error) => {
         if (!active) return;
+        const kind = classifyVerificationError(error);
         // The API client already ran the central handler for 401 responses.
-        if (error?.status === 401) return;
-        removeToken();
+        if (kind === 'unauthorized') return;
+        if (kind === 'unavailable') {
+          // Server asleep or unreachable: keep the token and offer a retry instead of logging the user out.
+          dispatch({ type: 'SESSION_UNAVAILABLE' });
+          return;
+        }
+        clearStoredToken();
         dispatch({ type: 'SESSION_FAILED' });
         navigate('/login', { replace: true });
       });
@@ -102,7 +84,7 @@ export function AuthProvider({ children }) {
   const establishSession = useCallback(async (endpoint, credentials, destination) => {
     const payload = await apiRequest(endpoint, { method: 'POST', body: credentials, auth: false });
     const session = extractSession(payload);
-    saveToken(session.token);
+    storeToken(session.token);
     dispatch({ type: 'SIGNED_IN', user: session.user });
     navigate(safeDestination(destination ?? '/notes'), { replace: true });
     return session.user;
@@ -117,7 +99,7 @@ export function AuthProvider({ children }) {
   ), [establishSession]);
 
   const logout = useCallback(() => {
-    removeToken();
+    clearStoredToken();
     dispatch({ type: 'SIGNED_OUT' });
     navigate('/login', { replace: true });
   }, [navigate]);
@@ -139,6 +121,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const clearNotice = useCallback(() => dispatch({ type: 'CLEAR_NOTICE' }), []);
+  const retryVerification = useCallback(() => dispatch({ type: 'VERIFY_RETRY' }), []);
 
   const value = useMemo(() => ({
     status: state.status,
@@ -150,7 +133,8 @@ export function AuthProvider({ children }) {
     refreshUser,
     updateAuthenticatedUser,
     clearNotice,
-  }), [state, login, register, logout, refreshUser, updateAuthenticatedUser, clearNotice]);
+    retryVerification,
+  }), [state, login, register, logout, refreshUser, updateAuthenticatedUser, clearNotice, retryVerification]);
 
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

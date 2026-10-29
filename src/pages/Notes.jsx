@@ -51,6 +51,7 @@ export default function Notes() {
   const [deletingId, setDeletingId] = useState(null);
   const titleInputRef = useRef(null);
   const requestSequence = useRef(0);
+  const focusedEmptyState = useRef(false);
 
   const loadNotes = useCallback(async (requestedPage, requestedLimit) => {
     const sequence = ++requestSequence.current;
@@ -90,7 +91,11 @@ export default function Notes() {
   }, [loadNotes, page, limit]);
 
   useEffect(() => {
-    if (listState === 'empty') titleInputRef.current?.focus();
+    // Focus the form the first time the list is empty; do not steal focus on every later reload.
+    if (listState === 'empty' && !focusedEmptyState.current) {
+      focusedEmptyState.current = true;
+      titleInputRef.current?.focus();
+    }
   }, [listState]);
 
   function clearActionMessages() {

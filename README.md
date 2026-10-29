@@ -59,7 +59,7 @@ Deploy this frontend repository with Vercel's Vite preset. Set `VITE_API_URL` in
 
 `vercel.json` rewrites deep links to `/index.html` so routes such as `/admin/users` and `/users/<id>/posts` still load after a browser refresh. It also sets a Content Security Policy and `X-Content-Type-Options`.
 
-**Before production deployment:** edit `connect-src` in `vercel.json` to replace the temporary `https://*.onrender.com` allowance with the exact HTTPS origin of your backend (for example, `https://your-service.onrender.com`). Keep the origin only—do not add `/api/v1` to the CSP host. The localhost allowance is for local API development and can be removed for production. Make sure the backend's `CORS_ORIGINS` includes the exact Vercel site origin. Do not add inline scripts or inline style attributes; the CSP intentionally blocks them.
+**Before production deployment:** edit `connect-src` in `vercel.json` to replace the temporary `https://*.onrender.com` allowance with the exact HTTPS origin of your backend (for example, `https://your-service.onrender.com`). Keep the origin only—do not add `/api/v1` to the CSP host. `vercel.json` no longer contains a localhost allowance: its headers apply only on Vercel, so local `npm run dev` and `npm run preview` are unaffected. Make sure the backend's `CORS_ORIGINS` includes the exact Vercel site origin. Do not add inline scripts or inline style attributes; the CSP intentionally blocks them.
 
 ## Route and refresh smoke checks
 
@@ -72,3 +72,40 @@ After `npm run build`, run `npm run preview` and verify:
 - `/users/<known-user-id>/posts` works in a private window with no session.
 - An unknown path shows Page not found.
 - Refreshing `/admin/users` and `/users/<known-user-id>/posts` does not return the hosting provider's 404 page.
+
+
+## Phase 4.10 — Frontend manual QA checklist
+
+Run the frontend and backend locally with the demo data loaded. Tick each item only after verifying it in the browser against the running API. Use demo credentials, not real passwords. Record any failure next to the relevant item before fixing it.
+
+### User stories US-01 through US-08 — account and notes
+
+- [ ] **US-01 — Register:** register a new account with name, email, password, and optional interests; confirm the UI signs in and navigates to Notes. Try a duplicate email and confirm a safe field/form error appears. Confirm the client cannot choose the registration role.
+- [ ] **US-02 — Login:** log in with valid credentials; invalid email and invalid password display the same generic authentication message. Confirm a page refresh keeps a valid session.
+- [ ] **US-03 — Profile:** open Profile, update name and interests, save, reload, and confirm the saved normalized interests are shown. Email and role are read-only.
+- [ ] **US-04 — Create note:** create a note with a valid title and content; confirm it appears in My Notes. Try empty and overlong values and confirm inline validation.
+- [ ] **US-05 — List own notes:** create enough notes to paginate, switch page sizes (10/25/50), and confirm newest-first ordering and correct paging. Sign in as a second user and confirm the first user's notes aren't listed.
+- [ ] **US-06 — View note:** open/load one of your notes through the UI (for example, using its edit action) and confirm its contents populate correctly. Confirm another user's note is not exposed if you exercise the endpoint directly.
+- [ ] **US-07 — Update note:** edit your note and save; confirm the changed values persist after reload. Confirm attempts to update another user's note are rejected.
+- [ ] **US-08 — Delete note:** delete your note and accept the confirmation; confirm it disappears. Delete the last note on the last page and confirm pagination returns to a valid page.
+
+### Admin stories US-09 through US-13
+
+- [ ] **US-09 — List users:** as an admin, open Admin Users and verify pagination and page-size changes. As a regular user, open `/admin/users` directly and confirm Forbidden; an anonymous visitor should be sent to Login.
+- [ ] **US-10 — Add user:** as an admin, create both a regular user and an admin using the form. Confirm duplicate-email and invalid-field errors display safely.
+- [ ] **US-11 — Manage user:** view and edit another user's profile, including role and interests; test password reset only with a disposable test account. Delete a disposable account and verify its notes/posts are removed. Confirm the current admin's own row cannot be deleted or have its role changed.
+- [ ] **US-12 — List all notes:** open Admin Notes; confirm the table is read-only, pagination works, and a valid owner ID filter returns the expected notes. An invalid owner ID should show a safe validation message.
+- [ ] **US-13 — Group by interests:** open Admin Interests and confirm group names/counts, pagination, and displayed member details match the API. Verify a regular user cannot access the page.
+
+### Post stories US-14 through US-15
+
+- [ ] **US-14 — Publish post:** as a signed-in user, publish a post from Profile; confirm it appears under My Posts and on that user's public posts page. Test required title/body validation.
+- [ ] **US-15 — Public posts:** open `/users/<known-user-id>/posts` in a private/incognito window while logged out. Confirm posts are newest first, pagination works, an account without posts shows an empty state, and a nonexistent user shows User not found.
+
+### Session, failure, and routing checks
+
+- [ ] **Expired/invalid token:** in browser DevTools, set `localStorage` key `notes.token` to an invalid value, reload a protected page, and confirm the session is cleared and Login is shown with a useful notice. Then log in normally.
+- [ ] **Cold-start/API unavailable message:** stop the backend and reload a page requiring API data; confirm the app shows a safe, helpful error and Retry (where available), not a blank screen or raw stack trace. Restart the backend and confirm Retry recovers.
+- [ ] **Deep-link refresh:** run `npm run build` and `npm run preview`; directly open and refresh `/admin/users`, `/admin/notes`, `/admin/interests`, and `/users/<known-user-id>/posts`. Confirm the app route loads instead of a host-level 404.
+- [ ] **Not Found:** open an unknown path; confirm the accessible Not Found screen and recovery links work.
+- [ ] **Role-based header/navigation:** verify anonymous, regular-user, and admin header links differ correctly; a regular user accessing admin routes sees Forbidden without a redirect loop.

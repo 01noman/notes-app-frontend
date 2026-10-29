@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import { AnonymousOnly, RequireAdmin, RequireAuth } from './auth/guards.jsx';
 import Header from './components/Header.jsx';
+import Message from './components/Message.jsx';
 import AdminInterests from './pages/AdminInterests.jsx';
 import AdminNotes from './pages/AdminNotes.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
@@ -26,12 +27,27 @@ export const APP_PATHS = Object.freeze({
 });
 
 function AppLayout() {
-  const { status, user, notice, logout, clearNotice } = useAuth();
+  const { status, user, notice, logout, clearNotice, retryVerification } = useAuth();
 
   // Match the session state machine: don't flash the anonymous header while a
   // stored token is being verified on application boot.
   if (status === 'verifying') {
     return <main className="container" role="status" aria-live="polite">Loading…</main>;
+  }
+
+  // The stored token was kept because the server could not be reached (for example a free-tier cold start).
+  if (status === 'unavailable') {
+    return (
+      <main className="container">
+        <h1>Secure Notes</h1>
+        <Message
+          kind="error"
+          message="Cannot reach the server. It may be waking up (up to 60 seconds). Your session is kept; please retry."
+          onRetry={retryVerification}
+        />
+        <p><button className="button--secondary" type="button" onClick={logout}>Log out</button></p>
+      </main>
+    );
   }
 
   return (

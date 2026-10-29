@@ -66,7 +66,7 @@ export function resolveAdminInterestsPage(requestedPage, pagination) {
 }
 
 export function getAdminInterestsErrorMessage(error) {
-  const status = Number(error?.status) || 0;
+  const status = typeof error?.status === 'number' ? error.status : null;
   const code = typeof error?.code === 'string' ? error.code : '';
   if (status === 403) return "You don't have access to this page.";
   if (status === 400) return 'The grouped interests request was rejected. Check the pagination values.';
@@ -75,11 +75,11 @@ export function getAdminInterestsErrorMessage(error) {
   if (status === 0 || error?.timedOut === true || code === 'NETWORK_ERROR') {
     return 'Cannot reach server. It may be waking up; please retry.';
   }
-  if (status >= 500) return 'The server could not complete the request. Please try again.';
+  if (status !== null && status >= 500) return 'The server could not complete the request. Please try again.';
   return 'Could not load grouped interests. Please try again.';
 }
 
 export function isAdminInterestsRetryableError(error) {
-  const status = Number(error?.status) || 0;
-  return status === 0 || error?.timedOut === true || status >= 500;
+  const status = typeof error?.status === 'number' ? error.status : null;
+  return status === 0 || error?.timedOut === true || error?.code === 'NETWORK_ERROR' || (status !== null && status >= 500);
 }

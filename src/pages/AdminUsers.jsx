@@ -7,6 +7,7 @@ import Pagination from '../components/Pagination.jsx';
 import {
   buildAdminUserPayload,
   buildAdminUsersRequest,
+  isCurrentAdminUser,
   canChangeAdminUserRole,
   canDeleteAdminUser,
   getAdminUsersErrorMessage,
@@ -146,7 +147,7 @@ function UserFormFields({
 }
 
 export default function AdminUsers() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const currentUserId = typeof currentUser?._id === 'string' ? currentUser._id : '';
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
@@ -338,6 +339,8 @@ export default function AdminUsers() {
         body: buildAdminUserPayload(editForm, 'edit'),
       });
       normalizeAdminUserResponse(payload, targetId);
+      // Editing your own account must update the name/email shown in the header.
+      if (isCurrentAdminUser(currentUserId, targetId)) void refreshUser().catch(() => {});
       cancelEdit();
       setPageMessage({ kind: 'success', message: 'User updated.' });
       setRetryCount((value) => value + 1);

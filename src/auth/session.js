@@ -11,6 +11,11 @@ export function authReducer(state, action) {
     case 'SESSION_VERIFIED':
     case 'SIGNED_IN':
       return { status: 'authenticated', user: action.user, notice: null };
+    case 'SESSION_UNAVAILABLE':
+      // The server could not be reached while verifying: keep the stored token and let the user retry.
+      return state.status === 'verifying' ? { status: 'unavailable', user: null, notice: null } : state;
+    case 'VERIFY_RETRY':
+      return state.status === 'unavailable' ? { status: 'verifying', user: null, notice: null } : state;
     case 'SESSION_FAILED':
       return { status: 'anonymous', user: null, notice: action.notice ?? null };
     case 'SIGNED_OUT':
@@ -26,9 +31,22 @@ export function authReducer(state, action) {
   }
 }
 
+/**
+ * Decide what boot verification should do with a failed GET /users/me:
+ *  - 'unauthorized': 401 — the API client already cleared the token and signed the user out.
+ *  - 'unavailable': network failure, timeout or 5xx — the token may still be valid, so keep it.
+ *  - 'invalid': any other response (bad shape, 4xx) — the stored session cannot be used.
+ */
+export function classifyVerificationError(error) {
+  if (error?.status === 401) return 'unauthorized';
+  const network = error?.status === 0 || error?.timedOut === true || error?.code === 'NETWORK_ERROR';
+  if (network || (typeof error?.status === 'number' && error.status >= 500)) return 'unavailable';
+  return 'invalid';
+}
+
 /** Pure decision logic shared by route guards and tests. */
 export function getGuardDecision({ status, user, mode = 'auth', from }) {
-  if (status === 'verifying') return { type: 'loading' };
+  if (status === 'verifying' || status === 'unavailable') return { type: 'loading' };
 
   if (mode === 'anonymous') {
     return status === 'authenticated'

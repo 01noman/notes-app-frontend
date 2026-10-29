@@ -51,7 +51,6 @@ export default function Login() {
     <main className="container auth-page">
       <section className="auth-card" aria-labelledby="login-heading">
         <h1 id="login-heading">Log in</h1>
-        {notice && <Message kind="error" message={notice} compact />}
         {formError && <Message kind="error" message={formError} compact />}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate aria-busy={submitting}>

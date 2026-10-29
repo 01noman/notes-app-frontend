@@ -140,7 +140,7 @@ export function mapAdminUserValidationDetails(details, allowedFields = USER_FIEL
 }
 
 export function getAdminUsersErrorMessage(error, operation = 'load') {
-  const status = Number(error?.status) || 0;
+  const status = typeof error?.status === 'number' ? error.status : null;
   const code = typeof error?.code === 'string' ? error.code : '';
 
   if (status === 403) return "You don't have access to this page.";
@@ -150,7 +150,7 @@ export function getAdminUsersErrorMessage(error, operation = 'load') {
   if (status === 401) return 'Your session is no longer valid. Please log in again.';
   if (status === 429) return 'Too many requests. Please wait a moment.';
   if (status === 0 || error?.timedOut || code === 'NETWORK_ERROR') return 'Cannot reach server. Check your connection and try again.';
-  if (status >= 500) return 'The server could not complete the request. Please try again.';
+  if (status !== null && status >= 500) return 'The server could not complete the request. Please try again.';
   if (operation === 'create') return 'Could not add this user. Please try again.';
   if (operation === 'edit') return 'Could not update this user. Please try again.';
   if (operation === 'delete') return 'Could not delete this user. Please try again.';
@@ -158,8 +158,8 @@ export function getAdminUsersErrorMessage(error, operation = 'load') {
 }
 
 export function isAdminUsersRetryableError(error) {
-  const status = Number(error?.status) || 0;
-  return status === 0 || error?.timedOut === true || status >= 500;
+  const status = typeof error?.status === 'number' ? error.status : null;
+  return status === 0 || error?.timedOut === true || error?.code === 'NETWORK_ERROR' || (status !== null && status >= 500);
 }
 
 export function resolveAdminUsersPage(requestedPage, pagination) {

@@ -44,7 +44,7 @@ export function setUnauthorizedHandler(handler) {
   };
 }
 
-function readStoredToken() {
+export function readStoredToken() {
   try {
     return globalThis.localStorage?.getItem(TOKEN_STORAGE_KEY) ?? null;
   } catch {
@@ -52,11 +52,35 @@ function readStoredToken() {
   }
 }
 
-function clearStoredToken() {
+export function clearStoredToken() {
   try {
     globalThis.localStorage?.removeItem(TOKEN_STORAGE_KEY);
   } catch {
     // Storage can be unavailable in browser privacy modes; the request still fails safely.
+  }
+}
+
+/** Persist the session token. Throws a user-safe Error if the browser blocks storage. */
+export function storeToken(token) {
+  try {
+    const storage = globalThis.localStorage;
+    if (!storage) throw new Error('Storage unavailable');
+    storage.setItem(TOKEN_STORAGE_KEY, token);
+  } catch {
+    throw new Error('This browser could not save your session. Check local storage settings and try again.');
+  }
+}
+
+/**
+ * Fire-and-forget request that wakes a sleeping free-tier host (for example Render) while the
+ * visitor is still reading the page. It sends no credentials and never throws.
+ */
+export function wakeServer() {
+  try {
+    if (typeof fetch !== 'function') return;
+    void fetch(`${API_BASE_URL}/health`, { method: 'GET', cache: 'no-store' }).catch(() => {});
+  } catch {
+    // Warming the server is best effort only.
   }
 }
 
